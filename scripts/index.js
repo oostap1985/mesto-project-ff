@@ -4,15 +4,17 @@ const cardTemplate = document.querySelector('#card-template').content;
 
 // @todo: DOM узлы
 
-const placesForCards = document.querySelector('.places__list');
+const placesForCard = document.querySelector('.places__list');
 
 // @todo: Функция создания карточки
 
-function getCard (element) {
+function getCard(objectCard) {
     const cardElement = cardTemplate.querySelector('.places__item').cloneNode(true);
-    cardElement.querySelector('.card__image').src = element.link;
-    cardElement.querySelector('.card__image').alt = element.name;
-    cardElement.querySelector('.card__title').textContent = element.name;
+    const cardImage = cardElement.querySelector('.card__image');
+    const cardTitle = cardElement.querySelector('.card__title');
+    cardImage.src = objectCard.link;
+    cardImage.alt = objectCard.name;
+    cardTitle.textContent = objectCard.name;
 
     const deleteButton = cardElement.querySelector('.card__delete-button');
     deleteButton.addEventListener('click', () => {
@@ -31,6 +33,6 @@ function deleteCard(deleteElement) {
 // @todo: Вывести карточки на страницу
 
 initialCards.forEach(function(item) {
-    cardElement = getCard (item);   //подскажите, пожалуйста, почему я смог обратится к этой переменной? она ведь объявлена в другой функции (НЕ в области видимости)
-    placesForCards.append(cardElement);
+    const cardElement = getCard(item);   //Спасибо большое, Ирина, за пояснение!
+    placesForCard.append(cardElement);
 });
