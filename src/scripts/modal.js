@@ -11,8 +11,8 @@ function openPopup(popup, classOpen) {
 function closePopup(popup, classOpen) {
     popup.classList.remove(classOpen);
     document.removeEventListener('keydown', closeEscPopup); // удаляем обработчик события нажатия клавиши "Esc"
-    popup.removeEventListener('click', closeClickOverlay); // добавляем слушатель клика по оверлею
-}
+    popup.removeEventListener('click', closeClickOverlay); // удаляем слушатель клика по оверлею
+};
 
 
 // Функция закрытия попапа нажатием клавиши "Escape"
@@ -32,4 +32,4 @@ function closeClickOverlay(event) {
 };
 
 
-export {openPopup, closePopup};
+//export {openPopup, closePopup};
