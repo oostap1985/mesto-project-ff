@@ -32,4 +32,4 @@ function closeClickOverlay(event) {
 };
 
 
-//export {openPopup, closePopup};
+export {openPopup, closePopup};
