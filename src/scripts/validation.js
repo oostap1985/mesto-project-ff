@@ -1,29 +1,27 @@
-import {objectOfClasses} from '../index';
-
 // Ниже описаны функции валидации
 
 // Функция невалидного input
 
-function showInputError(formElement, inputElement, errorMessage) {
+function showInputError(formElement, inputElement, errorMessage, objectOfClassesValidation) {
     const errorElement = formElement.querySelector(`.${inputElement.id}-error`);
-    inputElement.classList.add(objectOfClasses.inputErrorClass);
+    inputElement.classList.add(objectOfClassesValidation.inputErrorClass);
     errorElement.textContent = errorMessage;
-    errorElement.classList.add(objectOfClasses.errorClass);
+    errorElement.classList.add(objectOfClassesValidation.errorClass);
 };
 
 // Функция валидного input
 
-function hideInputError(formElement, inputElement) {
+function hideInputError(formElement, inputElement, objectOfClassesValidation) {
     const errorElement = formElement.querySelector(`.${inputElement.id}-error`);
-    inputElement.classList.remove(objectOfClasses.inputErrorClass);
+    inputElement.classList.remove(objectOfClassesValidation.inputErrorClass);
     
     errorElement.textContent = '';
-    errorElement.classList.remove(objectOfClasses.errorClass);
+    errorElement.classList.remove(objectOfClassesValidation.errorClass);
 };
 
 // Функция валидации input
 
-function checkInputValidity(formElement, inputElement) {
+function checkInputValidity(formElement, inputElement, objectOfClassesValidation) {
     if (inputElement.validity.patternMismatch) {
         inputElement.setCustomValidity(inputElement.dataset.errorMessage);
     } else {
@@ -31,9 +29,9 @@ function checkInputValidity(formElement, inputElement) {
     }
 
     if (!inputElement.validity.valid) {
-        showInputError(formElement, inputElement, inputElement.validationMessage);
+        showInputError(formElement, inputElement, inputElement.validationMessage, objectOfClassesValidation);
     } else {
-        hideInputError(formElement, inputElement);
+        hideInputError(formElement, inputElement, objectOfClassesValidation);
     }
 };
 
@@ -47,61 +45,58 @@ const hasInvalidInput = (inputList) => {
 
 // Функция, которая делает кнопку отправки формы активной/неактивной
 
-const toggleButtonState = (inputList, buttonElement) => {
+const toggleButtonState = (inputList, buttonElement, objectOfClassesValidation) => {
     if(hasInvalidInput(inputList)) {
-      buttonElement.classList.add(objectOfClasses.inactiveButtonClass);
+      buttonElement.classList.add(objectOfClassesValidation.inactiveButtonClass);
       buttonElement.disabled = true;
     } else {
-      buttonElement.classList.remove(objectOfClasses.inactiveButtonClass);
+      buttonElement.classList.remove(objectOfClassesValidation.inactiveButtonClass);
       buttonElement.disabled = false;
     }
 };
 
 // Навешиваем обработчик события "input" на все input формы
 
-function setEventListeners(formElement) {
-    const inputList = Array.from(formElement.querySelectorAll(objectOfClasses.inputSelector));
-    const buttonElement = formElement.querySelector(objectOfClasses.submitButtonSelector);
+function setEventListeners(formElement, objectOfClassesValidation) {
+    const inputList = Array.from(formElement.querySelectorAll(objectOfClassesValidation.inputSelector));
+    const buttonElement = formElement.querySelector(objectOfClassesValidation.submitButtonSelector);
 
-    toggleButtonState(inputList, buttonElement);
+    toggleButtonState(inputList, buttonElement, objectOfClassesValidation);
 
     inputList.forEach((inputElement) => {
       inputElement.addEventListener('input', function () {
-        checkInputValidity(formElement, inputElement);
-        toggleButtonState(inputList, buttonElement);
+        checkInputValidity(formElement, inputElement, objectOfClassesValidation);
+        toggleButtonState(inputList, buttonElement, objectOfClassesValidation);
       });
     });
 };
 
 // Валидация всех форм на странице
 
-const enableValidation = (objectOfClassesValid) => {
-    const formList = Array.from(document.querySelectorAll(objectOfClassesValid.formSelector));
+const enableValidation = (objectOfClassesValidation) => {
+    const formList = Array.from(document.querySelectorAll(objectOfClassesValidation.formSelector));
     formList.forEach(function(formElement) {
       formElement.addEventListener('submit', function(event) {
         event.preventDefault();
       });
-      setEventListeners(formElement);
+      setEventListeners(formElement, objectOfClassesValidation);
     });
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 // Функция, которая очищает ошибки валидации формы и делает кнопку неактивной.
 
-function clearValidation(profileForm, validationConfigObject) {
-    const inputListNovalid = Array.from(profileForm.querySelectorAll('.popup__input'));
+function clearValidation(formForClearingErrors, objectOfClassesValidation) {
+    const inputListNovalid = Array.from(formForClearingErrors.querySelectorAll(objectOfClassesValidation.inputSelector));
     inputListNovalid.forEach(function(inputElement) {
         if(!inputElement.validity.valid) {
-            inputElement.classList.remove(validationConfigObject.classInputNovalidity);
-            profileForm.querySelector(`.${inputElement.id}-error`).classList.remove(validationConfigObject.classErrorMessageActive);
-            const buttonElenent = profileForm.querySelector('.popup__button');
-            buttonElenent.classList.add(validationConfigObject.classButtonDisablet);
-            buttonElenent.disabled = true;
+            hideInputError(formForClearingErrors, inputElement, objectOfClassesValidation);
+            const buttonElenent = formForClearingErrors.querySelector(objectOfClassesValidation.submitButtonSelector);
+            toggleButtonState(inputListNovalid, buttonElenent, objectOfClassesValidation);
             inputElement.value = ""
         } else {
-          const buttonElenent = profileForm.querySelector('.popup__button');
-          buttonElenent.classList.remove(validationConfigObject.classButtonDisablet);
-          buttonElenent.disabled = false;
+            const buttonElenent = formForClearingErrors.querySelector(objectOfClassesValidation.submitButtonSelector);
+            toggleButtonState(inputListNovalid, buttonElenent, objectOfClassesValidation);;
         }
     })
 }

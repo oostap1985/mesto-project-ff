@@ -3,8 +3,7 @@ import "./pages/index.css";
 import {openPopup, closePopup} from './scripts/modal';
 import {getCard, deleteCard, likeCard} from './scripts/card';
 import {enableValidation, clearValidation} from './scripts/validation';
-import {config,
-    myUserData,
+import {myUserData,
     objectsCard,
     sendProfileData,
     sendCardOnServer,
@@ -39,6 +38,10 @@ const buttonClosePopupImageEdit = popupImageEdit.querySelector('.popup__close');
 const buttonClosePopupTypeEdit = popupTypeEdit.querySelector('.popup__close');
 const buttonClosePopupNewCard = popupNewCard.querySelector('.popup__close');
 const buttonClosePopupTypeImage = popupTypeImage.querySelector('.popup__close');
+
+const buttonSubmitPopupTypeEdit = popupTypeEdit.querySelector('.popup__button');
+const buttonSubmitPopupTypeImage = popupImageEdit.querySelector('.popup__button');
+const buttonSubmitPopupNewCard = popupNewCard.querySelector('.popup__button');
 
 const profileTitle = document.querySelector('.profile__title');
 const profileDescription = document.querySelector('.profile__description');
@@ -84,8 +87,6 @@ function renderLoading(isLoading, button) {
 function editProfileFromForm(evt) {
     evt.preventDefault(); // Эта строчка отменяет стандартную отправку формы.
 
-    // Получаем кнопку отправки форы
-    const buttonSubmitPopupTypeEdit = popupTypeEdit.querySelector('.popup__button');
     // вызываем функцию изменения названия кнопки при ожидании ответа
     renderLoading(true, buttonSubmitPopupTypeEdit);
 
@@ -95,6 +96,10 @@ function editProfileFromForm(evt) {
             // Полученные в ответе "name" и "about" передаем с соответствующие элементы DOM
             profileTitle.textContent = result.name;
             profileDescription.textContent = result.about;
+            // Очищаем поля формы
+            formPopupTypeEdit.reset();
+            // Закрытие попапа
+            closePopup(popupTypeEdit, 'popup_is-opened');
         })
         .catch((err) => {
             console.log("Ошибка при редактировании профиля", err);
@@ -102,10 +107,6 @@ function editProfileFromForm(evt) {
         .finally(() => {
             renderLoading(false, buttonSubmitPopupTypeEdit);// вызываем функцию изменения названия кнопки после ответа
         })
-
-    formPopupTypeEdit.reset();
-    // Закрытие попапа
-    closePopup(popupTypeEdit, 'popup_is-opened');
 };
 
 // Прикрепляем обработчик к форме:
@@ -117,8 +118,6 @@ formPopupTypeEdit.addEventListener('submit', editProfileFromForm);
 function editImageProfile(evt) {
     evt.preventDefault();
 
-    // Получаем кнопку отправки форы
-    const buttonSubmitPopupTypeImage = popupImageEdit.querySelector('.popup__button');
     //  вызываем функцию изменения названия кнопки при ожидании ответа
     renderLoading(true, buttonSubmitPopupTypeImage);
     // отправляем новую аватарку на сервер
@@ -126,6 +125,10 @@ function editImageProfile(evt) {
         .then((result) => {
             console.log(result)
             profileAvatar.style.backgroundImage = `url(${result.avatar})`;
+            // Очищаем форму после отправки
+            formPopupImageProfileEdit.reset();
+            // Закрытие попапа
+            closePopup(popupImageEdit, 'popup_is-opened');
         })
         .catch((err) => {
             console.log("Ошибка при редактировании аватара профиля", err);
@@ -133,10 +136,6 @@ function editImageProfile(evt) {
         .finally(() => {
             renderLoading(false, buttonSubmitPopupTypeImage);// вызываем функцию изменения названия кнопки после ответа
         })
-    // Очищаем форму после отправки
-    formPopupImageProfileEdit.reset();
-    // Закрытие попапа
-    closePopup(popupImageEdit, 'popup_is-opened');
 };
 
 formPopupImageProfileEdit.addEventListener('submit', editImageProfile);
@@ -146,21 +145,22 @@ formPopupImageProfileEdit.addEventListener('submit', editImageProfile);
 // Обработчики кликов открытия попапов
 buttonEditProfile.addEventListener('click', function () {
 
+    clearValidation(formPopupTypeEdit, objectOfClassesForValidation);
+
     //здесь добавления значений инпутов при открытии попапа
     nameInput.value = profileTitle.textContent;
     jobInput.value = profileDescription.textContent;
 
-    clearValidation(formPopupTypeEdit, validationConfig);
     openPopup(popupTypeEdit, 'popup_is-opened');
 });
 
 buttonAddProfile.addEventListener('click', function () {
-    clearValidation(formNewPlace, validationConfig);
+    clearValidation(formNewPlace, objectOfClassesForValidation);
     openPopup(popupNewCard, 'popup_is-opened');
 });
 
 buttonImageProfile.addEventListener('click', function() {
-    clearValidation(formPopupImageProfileEdit, validationConfig);
+    clearValidation(formPopupImageProfileEdit, objectOfClassesForValidation);
     openPopup(popupImageEdit, 'popup_is-opened');
 });
 
@@ -224,25 +224,33 @@ function openImagePopup(linkImg, nameImg) {
 function createCardFromForm(event) {
     event.preventDefault(); // отменяем стандартную отправку формы.
 
-    // Получаем кнопку отправки форы
-    const buttonSubmitPopupNewCard = popupNewCard.querySelector('.popup__button');
     //  вызываем функцию изменения названия кнопки при ожидании ответа
     renderLoading(true, buttonSubmitPopupNewCard);
     // отправляем новую карточку на сервер
     sendCardOnServer(config, placeNameInput.value, linkInput.value)
         .then((newCadr) => {
-            const myLikeNewCard = newCadr.likes.some(user => user._id === useInfo._id);
-            const myNewCard = getCard(newCadr.link, newCadr.name, newCadr._id, newCadr.likes, deleteCard, likeCard, openImagePopup);
-            if(newCadr.owner._id === useInfo._id) {
-                const buttonDel = myNewCard.querySelector('.card__delete-button');
-                buttonDel.classList.remove('card__delete-button-hidden');
-            }
-            if(myLikeNewCard === true) {
-                const buttonLike = myNewCard.querySelector('.card__like-button');
-                buttonLike.classList.add('card__like-button_is-active');
-            }
 
-            placeForCard.prepend(myNewCard); // выводим на экран (в начало списка карточек)
+            // записывае в константу результат вызова функции создания карточки
+            const myNewCard = getCard(cardTemplate,
+                newCadr.link,
+                newCadr.name,
+                newCadr._id,
+                newCadr.likes,
+                newCadr.owner,
+                useInfo,
+                deleteCard,
+                likeCard,
+                openImagePopup,
+                config);
+            
+            // выводим на экран (в начало списка карточек)
+            placeForCard.prepend(myNewCard);
+
+            // очищаем поля формы
+            formNewPlace.reset();
+
+            // закрываем попап
+            closePopup(popupNewCard, 'popup_is-opened');
         })
         .catch((err) => {
             console.log("Ошибка при добавлении карточки на сервер", err);
@@ -251,9 +259,7 @@ function createCardFromForm(event) {
             renderLoading(false, buttonSubmitPopupNewCard);// вызываем функцию изменения названия кнопки после ответа
         })
     
-    formNewPlace.reset(); // очищаем поля формы
-
-    closePopup(popupNewCard, 'popup_is-opened'); // закрываем попап
+    
 
 };
 
@@ -263,7 +269,7 @@ formNewPlace.addEventListener('submit', createCardFromForm);
 //-----------------------------------------------   ВАЛИДАЦИЯ   ----------------------------------------
 
 // объект классов для валидации
-const objectOfClasses = {
+const objectOfClassesForValidation = {
     formSelector: '.popup__form',
     inputSelector: '.popup__input',
     submitButtonSelector: '.popup__button',
@@ -274,28 +280,20 @@ const objectOfClasses = {
 
 
 // Вызов функции валидации
-enableValidation(objectOfClasses);
-
-
-
-// Объект классов для функции clearValidation
-const validationConfig = {
-    classButtonDisablet: 'popup__button_disabled',
-    classErrorMessageActive: 'popup__input-error_active',
-    classInputNovalidity: 'popup__input_type_error'
-};
-
+enableValidation(objectOfClassesForValidation);
 
 //----------------------------------------------------   API   -------------------------------------------
 
-// Функция проверки статуса ответа от сервера. Если ок, тогда переводим ответ в формат JSON
-function responseStatus(res) {
-    if (res.ok) {
-        return res.json();
+// Токен и индефикатор группы в URL
+const config = {
+    baseUrl: 'https://nomoreparties.co/v1/wff-cohort-37',
+    headers: {
+      authorization: '7589cc2e-fb35-43d4-a4c5-1c85a7f6547d',
+      'Content-Type': 'application/json'
     }
+}
 
-    return Promise.reject(`Ошибка: ${res.status}`);
-};
+
 
 // Функция заполнения профиля информацией с сервера
 function infoProfile(useInfoOn) {
@@ -307,7 +305,7 @@ function infoProfile(useInfoOn) {
 // В переменной будут записаны данные пользователя
 let useInfo;
 
-const promises = [myUserData(), objectsCard()];
+const promises = [myUserData(config), objectsCard(config)];
 
 
 // Промис, который принимает на себя два разных запроса на сервер
@@ -316,29 +314,28 @@ Promise.all(promises)
 
         useInfo = myUse;
 
+        // Заполняем поля профиля
         infoProfile(myUse);
 
         cards.forEach(function(itemCard) {
-            const myLike = itemCard.likes.some(user => user._id === myUse._id);
-            const cardNewObject = getCard(itemCard.link, itemCard.name, itemCard._id, itemCard.likes, deleteCard, likeCard, openImagePopup);
-            if(itemCard.owner._id === myUse._id) {
-                const buttonDel = cardNewObject.querySelector('.card__delete-button');
-                buttonDel.classList.remove('card__delete-button-hidden');
-            }
-            if(myLike === true) {
-                const buttonLike = cardNewObject.querySelector('.card__like-button');
-                buttonLike.classList.add('card__like-button_is-active');
-            }
+
+            // записывае в константу результат вызова функции создания карточки
+            const cardNewObject = getCard(cardTemplate,
+                itemCard.link,
+                itemCard.name,
+                itemCard._id,
+                itemCard.likes,
+                itemCard.owner,
+                myUse,
+                deleteCard,
+                likeCard,
+                openImagePopup,
+                config);
+            
+            // выводим карточку на экран
             placeForCard.append(cardNewObject);
         })
     })
     .catch((err) => {
         console.log("Ошибка", err);
     })
-
-
-
-
-export {cardTemplate};
-export {objectOfClasses};
-export {responseStatus};

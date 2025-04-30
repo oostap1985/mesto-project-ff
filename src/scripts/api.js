@@ -1,23 +1,16 @@
-import {responseStatus} from '../index'
-
-
-
-
-
-// Токен и индефикатор группы в URL
-const config = {
-    baseUrl: 'https://nomoreparties.co/v1/wff-cohort-37',
-    headers: {
-      authorization: '7589cc2e-fb35-43d4-a4c5-1c85a7f6547d',
-      'Content-Type': 'application/json'
+// Функция проверки статуса ответа от сервера. Если ок, тогда переводим ответ в формат JSON
+function responseStatus(res) {
+    if (res.ok) {
+        return res.json();
     }
-}
 
+    return Promise.reject(`Ошибка: ${res.status}`);
+};
 
 
 
 // Функция GET запроса пользовательских данных
-function myUserData() {
+function myUserData(config) {
     return fetch(`${config.baseUrl}/users/me`, {
             headers: config.headers
             })
@@ -25,7 +18,7 @@ function myUserData() {
 };
 
 // Функция GET запроса массива объектов карточек
-function objectsCard() {
+function objectsCard(config) {
     return fetch(`${config.baseUrl}/cards`, {
             headers: config.headers
             })
@@ -36,10 +29,10 @@ function objectsCard() {
 
 
 // Функция(запрос) сохранения на сервере текстовой информации профиля
-function sendProfileData(myConfig, nameValue, aboutValue) {
-    return fetch(`${myConfig.baseUrl}/users/me`, {
+function sendProfileData(config, nameValue, aboutValue) {
+    return fetch(`${config.baseUrl}/users/me`, {
             method: 'PATCH',
-            headers: myConfig.headers,
+            headers: config.headers,
             body: JSON.stringify({
                 name: nameValue,
                 about: aboutValue
@@ -49,10 +42,10 @@ function sendProfileData(myConfig, nameValue, aboutValue) {
 };
 
 // Функция(запрос) отправки карточки на сервер
-function sendCardOnServer(myConfig, nameValue, linkValue) {
-    return fetch(`${myConfig.baseUrl}/cards`, {
+function sendCardOnServer(config, nameValue, linkValue) {
+    return fetch(`${config.baseUrl}/cards`, {
             method: 'POST',
-            headers: myConfig.headers,
+            headers: config.headers,
             body: JSON.stringify({
                 name: nameValue,
                 link: linkValue
@@ -62,10 +55,10 @@ function sendCardOnServer(myConfig, nameValue, linkValue) {
 };
 
 // Функция(запрос) отправки аватарки на сервер
-function sendAvatarOnServer(myConfig, linkValue) {
-    return fetch(`${myConfig.baseUrl}/users/me/avatar`, {
+function sendAvatarOnServer(config, linkValue) {
+    return fetch(`${config.baseUrl}/users/me/avatar`, {
             method: 'PATCH',
-            headers: myConfig.headers,
+            headers: config.headers,
             body: JSON.stringify({
                 avatar: linkValue
                 })
@@ -74,10 +67,10 @@ function sendAvatarOnServer(myConfig, linkValue) {
 };
 
 // Функция(запрос) удаления карточки с сервера
-function deleteCardOnServer(myConfig, cardID, cardName, cardLink) {
-    return fetch(`${myConfig.baseUrl}/cards/${cardID}`, {
+function deleteCardOnServer(config, cardID, cardName, cardLink) {
+    return fetch(`${config.baseUrl}/cards/${cardID}`, {
             method: 'DELETE',
-            headers: myConfig.headers,
+            headers: config.headers,
             body: JSON.stringify({
                 name: cardName,
                 link: cardLink
@@ -87,19 +80,19 @@ function deleteCardOnServer(myConfig, cardID, cardName, cardLink) {
 };
 
 // Функция(запрос) сохранения лайка
-function sendLikeOnServer(myConfig, cardID) {
-    return fetch(`${myConfig.baseUrl}/cards/likes/${cardID}`, {
+function sendLikeOnServer(config, cardID) {
+    return fetch(`${config.baseUrl}/cards/likes/${cardID}`, {
             method: 'PUT',
-            headers: myConfig.headers
+            headers: config.headers
             })
             .then(res => responseStatus(res))
 };
 
 // Функция(запрос) удаления лайка
-function deleteLikeOnServer(myConfig, cardID) {
-    return fetch(`${myConfig.baseUrl}/cards/likes/${cardID}`, {
+function deleteLikeOnServer(config, cardID) {
+    return fetch(`${config.baseUrl}/cards/likes/${cardID}`, {
             method: 'DELETE',
-            headers: myConfig.headers
+            headers: config.headers
             })
             .then(res => responseStatus(res))
 };
@@ -107,8 +100,7 @@ function deleteLikeOnServer(myConfig, cardID) {
 
 
 
-export {config,
-    myUserData,
+export {myUserData,
     objectsCard,
     sendProfileData,
     sendCardOnServer,
